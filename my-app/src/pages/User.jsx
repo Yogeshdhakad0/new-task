@@ -21,6 +21,7 @@ function User() {
   const [showCart, setShowCart] = useState(false)
   const [selectedSize, setSelectedSize] = useState({})
   const [addingId, setAddingId] = useState(null)
+  const [cartError, setCartError] = useState('')
 
   useEffect(() => {
     dispatch(fetchProducts())
@@ -35,15 +36,23 @@ function User() {
   const handleAddToCart = async (product) => {
     const size = selectedSize[product._id] || product.sizes?.[0] || ''
     setAddingId(product._id)
-    await dispatch(addToCartAPI({ productId: product._id, quantity: 1, size }))
+    setCartError('')
+    const result = await dispatch(addToCartAPI({ productId: product._id, quantity: 1, size }))
+    if (addToCartAPI.rejected.match(result)) {
+      setCartError(result.payload || 'Failed to add to cart')
+    }
     setAddingId(null)
   }
 
   const handleUpdateQuantity = async (item, newQty) => {
+    setCartError('')
     if (newQty < 1) {
       await dispatch(removeFromCartAPI(item._id))
     } else {
-      await dispatch(updateCartItemAPI({ itemId: item._id, quantity: newQty }))
+      const result = await dispatch(updateCartItemAPI({ itemId: item._id, quantity: newQty }))
+      if (updateCartItemAPI.rejected.match(result)) {
+        setCartError(result.payload || 'Failed to update quantity')
+      }
     }
   }
 
@@ -83,12 +92,14 @@ function User() {
         </div>
         <div className="header-right">
           <span className="welcome-text">Welcome, {user?.name}</span>
-          <button className="cart-btn" onClick={() => setShowCart(!showCart)}>
-            🛒 Cart
-            {cartItemCount > 0 && (
-              <span className="cart-badge">{cartItemCount}</span>
-            )}
-          </button>
+          {user?.role !== 'admin' && (
+            <button className="cart-btn" onClick={() => setShowCart(!showCart)}>
+              🛒 Cart
+              {cartItemCount > 0 && (
+                <span className="cart-badge">{cartItemCount}</span>
+              )}
+            </button>
+          )}
           <button className="logout-btn" onClick={handleLogout}>
             Logout
           </button>
@@ -133,20 +144,33 @@ function User() {
                       </select>
                     </div>
                   )}
-                  <button
-                    className="add-to-cart-btn"
-                    onClick={() => handleAddToCart(product)}
-                    disabled={addingId === product._id || product.stock === 0}
-                  >
-                    {product.stock === 0
-                      ? 'Out of Stock'
-                      : addingId === product._id
-                      ? 'Adding...'
-                      : 'Add to Cart'}
-                  </button>
+                  {user?.role !== 'admin' ? (
+                    <button
+                      className="add-to-cart-btn"
+                      onClick={() => handleAddToCart(product)}
+                      disabled={addingId === product._id || product.stock === 0}
+                    >
+                      {product.stock === 0
+                        ? 'Out of Stock'
+                        : addingId === product._id
+                        ? 'Adding...'
+                        : 'Add to Cart'}
+                    </button>
+                  ) : (
+                    <div style={{ 
+                      padding: '10px', 
+                      textAlign: 'center', 
+                      color: '#666',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}>
+                      Stock: {product.stock} units
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
+
           </div>
         )}
       </div>
@@ -159,6 +183,19 @@ function User() {
               ✕
             </button>
           </div>
+
+          {cartError && (
+            <div style={{ 
+              padding: '10px', 
+              margin: '10px', 
+              background: '#fee', 
+              color: '#c00', 
+              borderRadius: '5px',
+              fontSize: '14px'
+            }}>
+              {cartError}
+            </div>
+          )}
 
           <div className="cart-items">
             {cart.length === 0 ? (
@@ -188,6 +225,11 @@ function User() {
                     <button
                       className="qty-btn"
                       onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
+                      disabled={item.quantity >= item.product?.stock}
+                      style={{ 
+                        opacity: item.quantity >= item.product?.stock ? 0.5 : 1,
+                        cursor: item.quantity >= item.product?.stock ? 'not-allowed' : 'pointer'
+                      }}
                     >
                       +
                     </button>

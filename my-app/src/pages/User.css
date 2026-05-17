@@ -114,32 +114,32 @@
 }
 
 .user-content {
-  padding: 30px;
-  max-width: 1400px;
+  padding: 40px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
 .tshirt-grid.user {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 32px;
 }
 
 .tshirt-card.user {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
 }
 
 .tshirt-card.user:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
 }
 
 .tshirt-image {
-  height: 280px;
+  height: 350px;
   overflow: hidden;
   position: relative;
   background: #f5f5f5;
@@ -179,19 +179,19 @@
 }
 
 .tshirt-info {
-  padding: 20px;
+  padding: 24px;
 }
 
 .tshirt-info h3 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
+  margin: 0 0 10px 0;
+  font-size: 18px;
   font-weight: 600;
   color: #2c3e50;
 }
 
 .tshirt-price {
-  margin: 0 0 12px 0;
-  font-size: 20px;
+  margin: 0 0 16px 0;
+  font-size: 24px;
   font-weight: 700;
   color: #27ae60;
 }

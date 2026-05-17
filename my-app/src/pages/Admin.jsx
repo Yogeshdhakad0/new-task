@@ -8,6 +8,7 @@ import {
   deleteProduct,
 } from '../store/tshirtSlice'
 import { useState, useEffect } from 'react'
+import API from '../api'
 import './Admin.css'
 
 const emptyForm = {
@@ -32,10 +33,33 @@ function Admin() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [formData, setFormData] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [orders, setOrders] = useState([])
+  const [userStats, setUserStats] = useState({ totalUsers: 0, total: 0 })
+  const [showOrders, setShowOrders] = useState(false)
 
   useEffect(() => {
     dispatch(fetchProducts())
+    fetchOrders()
+    fetchUserStats()
   }, [dispatch])
+
+  const fetchOrders = async () => {
+    try {
+      const { data } = await API.get('/orders/admin/all')
+      setOrders(data.orders || [])
+    } catch (err) {
+      console.error('Failed to fetch orders:', err)
+    }
+  }
+
+  const fetchUserStats = async () => {
+    try {
+      const { data } = await API.get('/auth/users/count')
+      setUserStats(data)
+    } catch (err) {
+      console.error('Failed to fetch user stats:', err)
+    }
+  }
 
   const handleLogout = () => {
     dispatch(logout())
@@ -126,12 +150,12 @@ function Admin() {
             <p className="stat-number">{items.length}</p>
           </div>
           <div className="stat-card">
-            <h3>T-Shirts</h3>
-            <p className="stat-number">{tshirtCount}</p>
+            <h3>Total Users</h3>
+            <p className="stat-number">{userStats.totalUsers}</p>
           </div>
           <div className="stat-card">
-            <h3>Jeans</h3>
-            <p className="stat-number">{jeansCount}</p>
+            <h3>Total Orders</h3>
+            <p className="stat-number">{orders.length}</p>
           </div>
           <div className="stat-card">
             <h3>Total Stock</h3>
@@ -141,6 +165,105 @@ function Admin() {
 
         {error && <div className="error-message" style={{ margin: '1rem 0' }}>{error}</div>}
 
+        {/* Orders Section */}
+        <div className="admin-content" style={{ marginBottom: '2rem' }}>
+          <div className="section-header">
+            <h2>Orders Management</h2>
+            <button
+              className="add-btn"
+              onClick={() => setShowOrders(!showOrders)}
+            >
+              {showOrders ? 'Hide Orders' : 'View All Orders'}
+            </button>
+          </div>
+
+          {showOrders && (
+            <div style={{ marginTop: '1rem' }}>
+              {orders.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                  No orders yet
+                </p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ 
+                    width: '100%', 
+                    borderCollapse: 'collapse',
+                    background: 'white',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}>
+                    <thead>
+                      <tr style={{ background: '#f5f5f5' }}>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Order ID</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>User</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Items</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Total</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Status</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((order) => (
+                        <tr key={order._id} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{ 
+                              fontFamily: 'monospace', 
+                              fontSize: '12px',
+                              background: '#f0f0f0',
+                              padding: '4px 8px',
+                              borderRadius: '4px'
+                            }}>
+                              {order._id.slice(-8)}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <div>
+                              <strong>{order.user?.name || 'N/A'}</strong>
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                {order.user?.email || 'N/A'}
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <div style={{ fontSize: '13px' }}>
+                              {order.orderItems?.map((item, idx) => (
+                                <div key={idx} style={{ marginBottom: '4px' }}>
+                                  {item.product?.name || 'Product'} × {item.quantity}
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <strong>${order.totalPrice?.toFixed(2)}</strong>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{ 
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              background: order.orderStatus === 'Delivered' ? '#d4edda' : 
+                                         order.orderStatus === 'Shipped' ? '#cce5ff' : '#fff3cd',
+                              color: order.orderStatus === 'Delivered' ? '#155724' : 
+                                     order.orderStatus === 'Shipped' ? '#004085' : '#856404'
+                            }}>
+                              {order.orderStatus}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px', fontSize: '13px', color: '#666' }}>
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Products Section */}
         <div className="admin-content">
           <div className="section-header">
             <h2>Manage Products</h2>

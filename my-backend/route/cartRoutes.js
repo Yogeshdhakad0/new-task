@@ -22,11 +22,27 @@ router.post("/", protect, async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
+    // Check stock availability
+    if (product.stock < quantity) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Only ${product.stock} items available in stock` 
+      });
+    }
+
     const user = await User.findById(req.user._id);
     const existing = user.cart.find((i) => i.product.toString() === productId);
 
     if (existing) {
-      existing.quantity += quantity;
+      const newQuantity = existing.quantity + quantity;
+      // Check if new quantity exceeds stock
+      if (newQuantity > product.stock) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Cannot add more. Only ${product.stock} items available` 
+        });
+      }
+      existing.quantity = newQuantity;
     } else {
       user.cart.push({ product: productId, quantity });
     }
@@ -43,9 +59,17 @@ router.post("/", protect, async (req, res) => {
 router.put("/:itemId", protect, async (req, res) => {
   try {
     const { quantity } = req.body;
-    const user  = await User.findById(req.user._id);
+    const user  = await User.findById(req.user._id).populate("cart.product");
     const item  = user.cart.id(req.params.itemId);
     if (!item) return res.status(404).json({ success: false, message: "Cart item not found" });
+
+    // Check stock availability
+    if (quantity > item.product.stock) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Only ${item.product.stock} items available in stock` 
+      });
+    }
 
     if (quantity <= 0) {
       item.deleteOne();

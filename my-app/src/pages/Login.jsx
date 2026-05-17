@@ -6,7 +6,7 @@ import './Login.css'
 
 function Login() {
   const [isRegister, setIsRegister] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user' })
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { loading, error } = useSelector((state) => state.auth)
@@ -21,7 +21,7 @@ function Login() {
 
     if (isRegister) {
       const result = await dispatch(
-        registerUser({ name: form.name, email: form.email, password: form.password, role: form.role })
+        registerUser({ name: form.name, email: form.email, password: form.password })
       )
       if (registerUser.fulfilled.match(result)) {
         navigate(result.payload.user.role === 'admin' ? '/admin' : '/user')
@@ -83,16 +83,6 @@ function Login() {
               required
             />
           </div>
-
-          {isRegister && (
-            <div className="form-group">
-              <label htmlFor="role">Role</label>
-              <select id="role" name="role" value={form.role} onChange={handleChange}>
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          )}
 
           {error && <div className="error-message">{error}</div>}
 

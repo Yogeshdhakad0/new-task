@@ -9,10 +9,10 @@ const router = express.Router();
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
-// POST /api/auth/register
+// POST /api/auth/register (always creates user role only)
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ success: false, message: "All fields required" });
 
@@ -20,7 +20,7 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "Email already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const user   = await User.create({ name, email, password: hashed, role: role || "user" });
+    const user   = await User.create({ name, email, password: hashed, role: "user" });
 
     res.status(201).json({
       success: true,
@@ -56,6 +56,22 @@ router.post("/login", async (req, res) => {
 // GET /api/auth/profile
 router.get("/profile", protect, async (req, res) => {
   res.json({ success: true, user: req.user });
+});
+
+// GET /api/auth/users/count (Admin only)
+router.get("/users/count", protect, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments({ role: "user" });
+    const totalAdmins = await User.countDocuments({ role: "admin" });
+    res.json({ 
+      success: true, 
+      totalUsers, 
+      totalAdmins,
+      total: totalUsers + totalAdmins
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 module.exports = router;
