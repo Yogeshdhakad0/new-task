@@ -265,8 +265,8 @@ function User() {
               <span>Total:</span>
               <span>${cartTotal.toFixed(2)}</span>
             </div>
-            <button className="checkout-btn" disabled={cart.length === 0}>
-              Proceed to Checkout
+            <button className="checkout-btn" disabled={cart.length === 0} onClick={() => { setShowCart(false); navigate('/checkout') }}>
+              Proceed to Checkout →
             </button>
           </div>
         </div>

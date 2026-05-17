@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import Login from './pages/Login'
 import Admin from './pages/Admin'
 import User from './pages/User'
+import Checkout from './pages/Checkout'
 import './App.css'
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -36,6 +37,14 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['user', 'admin']}>
             <User />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute allowedRoles={['user', 'admin']}>
+            <Checkout />
           </ProtectedRoute>
         }
       />
