@@ -50,6 +50,18 @@ router.put("/:id", protect, admin, async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+
+    // ✅ Socket.IO - Real-time stock update broadcast
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('stock_updated', {
+        productId: product._id,
+        stock: product.stock,
+        name: product.name,
+        price: product.price
+      });
+    }
+
     res.json({ success: true, product });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

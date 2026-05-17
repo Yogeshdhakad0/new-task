@@ -6,9 +6,11 @@ import {
   createProduct,
   editProduct,
   deleteProduct,
+  updateProductStock,
 } from '../store/tshirtSlice'
 import { useState, useEffect } from 'react'
 import API from '../api'
+import socket from '../socket'
 import './Admin.css'
 
 const emptyForm = {
@@ -41,6 +43,19 @@ function Admin() {
     dispatch(fetchProducts())
     fetchOrders()
     fetchUserStats()
+
+    // ✅ Socket.IO - Listen for real-time stock updates
+    socket.on('stock_updated', (data) => {
+      console.log('📦 Stock updated (admin):', data)
+      dispatch(updateProductStock({
+        productId: data.productId,
+        stock: data.stock
+      }))
+    })
+
+    return () => {
+      socket.off('stock_updated')
+    }
   }, [dispatch])
 
   const fetchOrders = async () => {

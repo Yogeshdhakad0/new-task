@@ -35,6 +35,8 @@
 require("dotenv").config();
 
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const cors = require("cors");
 const connectDB = require("./config/ConnectDB");
 
@@ -44,6 +46,33 @@ const cartRoutes = require("./route/cartRoutes");
 const orderRoutes = require("./route/orderRoutes");
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.IO setup with CORS
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+  }
+});
+
+// Make io accessible to routes
+app.set('io', io);
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('✅ User connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('❌ User disconnected:', socket.id);
+  });
+  
+  // Heartbeat to keep connection alive
+  socket.on('ping', () => {
+    socket.emit('pong');
+  });
+});
 
 // CORS Configuration - Allow all origins for now
 app.use(cors({
@@ -77,8 +106,9 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
+      console.log(`✅ Socket.IO ready for real-time updates`);
     });
 
   } catch (error) {

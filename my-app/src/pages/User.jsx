@@ -7,8 +7,10 @@ import {
   addToCartAPI,
   updateCartItemAPI,
   removeFromCartAPI,
+  updateProductStock,
 } from '../store/tshirtSlice'
 import { useState, useEffect } from 'react'
+import socket from '../socket'
 import './User.css'
 
 function User() {
@@ -26,6 +28,19 @@ function User() {
   useEffect(() => {
     dispatch(fetchProducts())
     dispatch(fetchCart())
+
+    // ✅ Socket.IO - Listen for real-time stock updates
+    socket.on('stock_updated', (data) => {
+      console.log('📦 Stock updated:', data)
+      dispatch(updateProductStock({
+        productId: data.productId,
+        stock: data.stock
+      }))
+    })
+
+    return () => {
+      socket.off('stock_updated')
+    }
   }, [dispatch])
 
   const handleLogout = () => {

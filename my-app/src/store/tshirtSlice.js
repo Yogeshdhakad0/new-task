@@ -128,6 +128,14 @@ const productsSlice = createSlice({
     clearProductError: (state) => {
       state.error = null
     },
+    // ✅ Real-time stock update from Socket.IO
+    updateProductStock: (state, action) => {
+      const { productId, stock } = action.payload
+      const product = state.items.find((p) => p._id === productId.toString())
+      if (product) {
+        product.stock = stock
+      }
+    },
   },
   extraReducers: (builder) => {
     // ── Fetch Products ──
@@ -202,5 +210,5 @@ const productsSlice = createSlice({
   },
 })
 
-export const { clearProductError } = productsSlice.actions
+export const { clearProductError, updateProductStock } = productsSlice.actions
 export default productsSlice.reducer
